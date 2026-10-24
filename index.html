@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ネット切断ログ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="flash"></div>
+<main>
+  <h1><span class="grad">ネット切断ログ</span><span class="badge">🔒 個人用</span></h1>
+
+  <div class="intro">
+    <b>あなた専用のモニターです</b>
+    記録も設定も、いま開いているこの端末のブラウザ内にだけ保存され、外部には送信されません。
+    他の人が同じURLを開いても、その人自身の端末の結果が表示されるだけで、あなたの記録は見えません。
+  </div>
+
+  <div class="status">
+    <div class="dot" id="dot"></div>
+    <div>
+      <b id="stateText">確認中…</b>
+      <small id="stateSub"></small>
+    </div>
+  </div>
+  <div class="banner" id="banner"></div>
+
+  <div class="stats">
+    <div class="card"><span>現在の遅延</span><strong id="sNow">-</strong></div>
+    <div class="card"><span>今日の平均遅延</span><strong id="sAvg">-</strong></div>
+    <div class="card"><span>今月の稼働率</span><strong id="sUp">-</strong><small>確認に成功した割合</small></div>
+    <div class="card"><span>切断回数</span><strong id="sCount">0</strong></div>
+    <div class="card"><span>切断時間の合計</span><strong id="sTotal">0秒</strong></div>
+    <div class="card"><span>最長の切断</span><strong id="sMax">-</strong></div>
+    <div class="card"><span>最新のダウンロード速度</span><strong id="sSpeed">-</strong><small id="sSpeedT"></small></div>
+    <div class="card"><span>現在のグローバルIP</span><strong id="sIp">-</strong></div>
+  </div>
+
+  <section>
+    <h2>この端末の情報</h2>
+    <div class="stats" id="dev"></div>
+    <div class="cap">ブラウザから読み取った値です。回線の種類や下りの目安はブラウザによる推定値で、外部には送信されません。</div>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>遅延(ping)の推移</h2>
+      <div class="row" id="rangeBtns">
+        <button data-r="15">15分</button>
+        <button data-r="60" class="on">1時間</button>
+        <button data-r="360">6時間</button>
+      </div>
+    </div>
+    <canvas id="lat"></canvas>
+    <div class="cap">緑の線が遅延、オレンジの点線が警告しきい値、赤い帯が接続失敗です。</div>
+  </section>
+
+  <section>
+    <h2>時間帯別の接続失敗率(曜日 × 時刻)</h2>
+    <div class="heat" id="heat"></div>
+    <div class="cap">濃い赤ほど、その曜日・時刻に接続確認が失敗した割合が高いことを示します(5%以上で最大)。灰色はデータなしです。</div>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>時間帯別の平均ダウンロード速度</h2>
+      <button id="btnSpeed">今すぐ測定</button>
+    </div>
+    <div class="bars" id="bars"></div>
+    <div class="cap" id="barsCap"></div>
+  </section>
+
+  <section>
+    <h2>設定</h2>
+    <div class="row">
+      <label>警告しきい値(遅延) <input type="number" id="setSlow" min="50" max="5000" step="50"> ms</label>
+      <label>速度測定の間隔
+        <select id="setSpeed">
+          <option value="15">15分</option>
+          <option value="30">30分</option>
+          <option value="60">60分</option>
+          <option value="120">120分</option>
+          <option value="0">自動測定しない</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="setHide"> IPアドレスを隠す</label>
+      <label><input type="checkbox" id="setAnim"> アニメーションを表示</label>
+    </div>
+  </section>
+
+  <section>
+    <h2>切断・不安定・空白のログ</h2>
+    <table>
+      <thead><tr><th>種類</th><th>開始</th><th>終了</th><th>時間</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>グローバルIPの変更履歴</h2>
+    <table>
+      <thead><tr><th>種類</th><th>時刻</th><th>変更前</th><th>変更後</th></tr></thead>
+      <tbody id="ipRows"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="row">
+      <button id="btnExport">JSONで書き出し</button>
+      <button id="btnImport">JSONを読み込み</button>
+      <button id="btnClear">ログを全消去</button>
+      <input type="file" id="file" accept=".json" hidden>
+    </div>
+  </section>
+
+  <p class="note">
+    このページを開いたままにしておくと、10秒ごとにネット接続を確認して自動で記録します。
+    すべてのデータはこのPCのブラウザ内(localStorage)に保存され、外部には送信されません。
+    灰色の「空白」は、ページが閉じていた・PCがスリープしていたなどで監視できなかった時間です。
+    ブラウザは裏に隠れたタブの動きを遅くすることがあり、その場合は確認間隔が1分ほどに伸びます。
+    グローバルIPはIPv4アドレスを監視します(回線の方式によっては変化しないことがあります)。
+    速度測定は1回につき約8MBを通信します。
+  </p>
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
